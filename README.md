@@ -136,8 +136,10 @@ root — it has no machine-specific paths, so it works verbatim on any machine:
 }
 ```
 
-Keep the URL exactly as written — Affinity's server only answers on `[::1]` (IPv6 loopback), not
-`localhost` or `127.0.0.1`.
+Keep the URL exactly as written — Affinity's server only answers on `[::1]` (IPv6 loopback);
+`127.0.0.1` never works. Plain `localhost` usually resolves to the same address on modern Windows,
+but `[::1]` is unambiguous and has no dependency on a given machine's DNS resolver order, so that's
+what we recommend.
 
 ---
 
