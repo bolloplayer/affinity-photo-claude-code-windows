@@ -40,6 +40,23 @@ against your version. The `preamble` doc (read it every session) is always the s
   return `NOT_ALLOWED` for filesystem, networking, or AI. If you have filesystem access, it's
   scoped to the **Desktop** (`app.userDesktopPath`).
 
+## Adjustment layers — traps that fail silently
+
+- **`CurvesAdjustmentParameters.masterSpline` is copy-on-get.** Mutating the object the getter
+  returns is **discarded without error**, and the Curves layer ends up a no-op — no exception, no
+  warning, just an adjustment that does nothing. Build a `Spline` and assign it back through the
+  setter instead. This is the worst kind of SDK trap: the script reports success and the image is
+  unchanged.
+- **`createDefault()` is inconsistent about the document argument.**
+  `LevelsAdjustmentRasterNodeDefinition.createDefault(doc)` requires it;
+  `VibranceAdjustmentRasterNodeDefinition.createDefault()` takes none. Get it wrong and you get
+  `Cannot read properties of undefined (reading 'handle')`, which says nothing about the real
+  cause. Check the signature per adjustment type rather than assuming they match.
+- **Selective Colour vs Vibrance, when choosing.** Vibrance is two numbers and protects
+  already-saturated pixels; Selective Colour is six ink triplets but lets you push one colour range
+  without touching the others. Vibrance for a quick global lift, Selective Colour for a look you
+  intend to keep tuning.
+
 ## Known limitations (as of Affinity Photo 3.2.x)
 
 - **No macro playback from a script.** You can record / import / export a macro, but there is **no
