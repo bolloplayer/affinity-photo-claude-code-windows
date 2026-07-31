@@ -55,7 +55,7 @@ http://[::1]:6767/sse
 | **Claude Code** — CLI, VS Code, Desktop Code tab | `.mcp.json` in the project | SSE native |
 | **Codex** — CLI, ChatGPT Codex tab | `~/.codex/config.toml` | stdio [bridge](bridge/) → SSE |
 | **Antigravity** (`agy`) — Gemini | `.agents/mcp_config.json` (`serverUrl`) | SSE native |
-| **OpenCode** — any model | `opencode.jsonc` or one CLI command | SSE native |
+| **OpenCode** — any model, incl. a free one | `~/.config/opencode/opencode.jsonc` (one CLI command) | SSE native |
 
 Three things that look like bugs and aren't: it's **`[::1]`, never `localhost` or `127.0.0.1`**
 (Affinity binds IPv6 loopback only); it's **SSE only** (there is no Streamable HTTP endpoint); and

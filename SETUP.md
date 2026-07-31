@@ -61,7 +61,7 @@ Identify which harness you are running inside, then write **only** that row's fi
 | **Claude Code** (CLI, VS Code ext, Desktop Code tab) | `.mcp.json` in the project folder | SSE native |
 | **Codex** (CLI, ChatGPT Codex tab, IDE extension) | `~/.codex/config.toml` | stdio bridge → SSE |
 | **Antigravity** (`agy`, any model it fronts — not only Gemini) | `.agents/mcp_config.json` in the workspace | SSE native |
-| **OpenCode** (any model) | `opencode.jsonc`, or one CLI command | SSE native |
+| **OpenCode** (any model, incl. a free one) | `~/.config/opencode/opencode.jsonc`, written by one CLI command | SSE native |
 
 ### Claude Code
 
@@ -235,16 +235,32 @@ opencode mcp list          # should report: connected
 `connected` means the config was written and answered. It is not proof that tools reached a session —
 step 5 is.
 
-> **Record which file this wrote.** This project's own notes disagree: `docs/choosing-your-ai.md`
-> says the global `~/.config/opencode/opencode.jsonc`, while this document's table and the README say
-> a project-level `opencode.jsonc`. Check which one appeared and say so, because it decides step 6:
-> a global file already covers every folder, and offering to "promote" it would be offering the user
-> something they have.
+**This writes the *global* config, not a project file** — `~/.config/opencode/opencode.jsonc`, which
+on Windows is `%USERPROFILE%\.config\opencode\opencode.jsonc`. Confirmed on OpenCode `1.18.10`: the
+command reports the path it wrote. So Affinity is available in **every folder** from the moment you
+run it, which is why step 6 has no "make it machine-wide" option — you already have it.
+
+To hand-edit instead, the shape is `mcp` (not `mcpServers`) and `type: "remote"`:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "affinity": { "type": "remote", "url": "http://[::1]:6767/sse" }
+  }
+}
+```
+
+If `opencode mcp list` reports **`✗ affinity failed — SSE error: Was there a typo in the url or
+port?`**, do not go looking for the typo. That is the message OpenCode gives when nothing is
+listening, and the overwhelmingly likely cause is that Affinity is not running or its MCP toggle is
+off. Check §0 before touching the URL.
 
 #### Step 2 — pick the free model
 
-Inside OpenCode, `/models` lists what is reachable. Choose **`opencode/deepseek-v4-flash-free`** —
-no credentials, no prepaid balance. Free tiers rate-limit and can be withdrawn without notice; if it
+Inside OpenCode, `/models` lists what is reachable (`opencode models` does the same from a shell).
+Choose **`opencode/deepseek-v4-flash-free`** — that exact id, confirmed present on `1.18.10`, and it
+is one of several `-free` models in the `opencode/` namespace. No credentials, no prepaid balance. Free tiers rate-limit and can be withdrawn without notice; if it
 is gone or queueing, `deepseek-v4-flash` on prepaid credits is the same model family at roughly
 $0.14/M in, and nothing about the connection changes.
 
@@ -312,9 +328,9 @@ boost, or write a black-and-white conversion from scratch — and follow §3's P
 they pick. Closing on "you can also stop here and nothing will be changed" is a real answer, not a
 failure to choose.
 
-**Option 3 depends on step 1.** If the server went into the global
-`~/.config/opencode/opencode.jsonc`, every folder already has Affinity — tell them that instead of
-offering an upgrade they already own. Only offer option 3 if step 1 wrote a project-level file.
+**Do not offer option 3.** It promotes a project-scoped server to user scope, which is a Claude Code
+distinction. `opencode mcp add` already wrote the global config, so every folder has Affinity
+from the moment step 1 ran. Tell them that rather than offering an upgrade they own.
 
 > **Status.** Verified: the connection itself, over native SSE with no bridge, on
 > `opencode/deepseek-v4-flash-free` at $0 with no credentials. **Option 2 is the open question on
@@ -889,6 +905,7 @@ for them.
 | `-32602 Unsupported protocol version` | Client initialized with an older MCP version | Codex: use the bridge. Others: check the harness's MCP version support |
 | Config says `enabled` / `connected`, no tools | Config loaded, handshake failed | Check the startup log for the protocol error. Do not substitute a hand-written SSE client for the real test |
 | `user cancelled MCP tool call` (`codex exec`) | Non-interactive approval policy; Affinity's tools publish no safety annotations | Use the interactive TUI. Not a bridge failure |
+| **OpenCode: `SSE error: Was there a typo in the url or port?`** | What `opencode mcp list` reports when **nothing is listening**. The wording sends people to check a URL that is usually correct | Start Affinity and confirm the MCP toggle, then re-run. Only suspect the URL once §0 is satisfied |
 | **Antigravity: no connection, no error at all** | The config used `url` instead of `serverUrl` | Rename the field in `.agents/mcp_config.json`. It fails silently, so there is nothing in the log to find |
 | **A script fails oddly, or a "verified" check passes suspiciously easily** | The file was reconstructed from a fetched page rather than copied. Observed at 33–49% of real size, syntactically valid, silently wrong | Re-download it with `Invoke-WebRequest -OutFile` or `git clone`, so the bytes go to disk without passing through you. Never retype the body of a file you just read |
 | **A multi-line file writes as one line full of `\n`** | `@'…'@` is a PowerShell *literal* here-string and does not interpret escapes. Four retries in one test run, all identical | Download the file instead of composing it — the handoff note lives at `handoff/AGENTS.antigravity.md`. If you must write one, use real line breaks and `Out-File -Encoding utf8` |

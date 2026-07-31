@@ -117,13 +117,13 @@ unverified, and the endpoint details for the untested rows still need checking.
 | # | Model | How you pay | CLI | Config file | Transport | Status |
 |---|---|---|---|---|---|---|
 | 1 | Claude (Opus / Sonnet) | Claude subscription | Claude Code | `.mcp.json` | SSE | ✅ Verified |
-| 2 | deepseek-v4-flash | Prepaid credits | OpenCode | `opencode.jsonc` | SSE | ✅ Verified |
-| 3 | deepseek-v4-pro | Prepaid credits | OpenCode | `opencode.jsonc` | SSE | ✅ Verified — worse than Flash |
+| 2 | deepseek-v4-flash | Prepaid credits | OpenCode | `~/.config/opencode/opencode.jsonc` | SSE | ✅ Verified |
+| 3 | deepseek-v4-pro | Prepaid credits | OpenCode | `~/.config/opencode/opencode.jsonc` | SSE | ✅ Verified — worse than Flash |
 | 4 | deepseek-v4-flash | Prepaid credits | Claude Code (redirected) | `.mcp.json` | SSE | ✅ Verified |
-| 5 | `opencode/deepseek-v4-flash-free` | Free | OpenCode | `opencode.jsonc` | SSE | ✅ Verified — $0 smoke test |
+| 5 | `opencode/deepseek-v4-flash-free` | Free | OpenCode | `~/.config/opencode/opencode.jsonc` | SSE | ✅ Verified — $0 smoke test. Model id confirmed present on OpenCode `1.18.10` |
 | 6 | GPT-5.x | ChatGPT subscription | Codex CLI | `~/.codex/config.toml` | custom stdio bridge | ✅ Fresh CLI auto-loaded tools, read `preamble`, and ran a read-only script |
 | 7 | GPT-5.x | OpenAI API key | Codex CLI | `~/.codex/config.toml` | stdio bridge | ✅ Same local transport verified; API-key authentication itself not tested |
-| 8 | GPT-5.x | OpenAI API key | OpenCode | `opencode.jsonc` | SSE | ❓ Untested — should just work |
+| 8 | GPT-5.x | OpenAI API key | OpenCode | `~/.config/opencode/opencode.jsonc` | SSE | ❓ Untested — should just work |
 | 9 | Gemini | Google subscription | Antigravity | `.agents/mcp_config.json` | SSE | ✅ Connection and script execution verified (29 July 2026) — but which model served that run was not recorded, and Antigravity fronts non-Gemini models, so "Gemini" is the label rather than a confirmed fact |
 | 10 | Antigravity's other models | Via Antigravity | Antigravity | `.agents/mcp_config.json` | SSE | ⚠️ **GPT-OSS 120B (Medium)** completed setup — config, byte-exact downloads, handoff note, restart — then could not call the tools it had, trying `node`, an invented `agy mcp` subcommand, and two fabricated "still running" reports. Harness fine, model unable to drive MCP |
 | 11 | Gemini | Google API key | Gemini CLI | `~/.gemini/settings.json` | ❓ | ❓ Not looked at yet |
@@ -227,7 +227,7 @@ transport it speaks, and how much of it is proven.
 | CLI | Models it reaches | Where MCP config goes | Transport | Status |
 |---|---|---|---|---|
 | **Claude Code** | Claude; anything on an Anthropic-compatible endpoint (DeepSeek) | `.mcp.json` in the project | SSE native | ✅ Proven, extensively |
-| **OpenCode** | Almost anything — Claude, GPT, DeepSeek, Gemini, local | `~/.config/opencode/opencode.jsonc` | SSE native (`remote`) | ✅ Full round-trip passed |
+| **OpenCode** | Almost anything — Claude, GPT, DeepSeek, Gemini, local | `~/.config/opencode/opencode.jsonc` — **global, not per-project** | SSE native (`remote`) | ✅ Full round-trip passed |
 | **Codex CLI / desktop environment** | GPT-5.x via ChatGPT login or OpenAI API key | `~/.codex/config.toml` | custom stdio bridge → SSE | ✅ Fresh CLI automatically discovered the tools, read `preamble`, and ran a read-only Affinity script |
 | **Antigravity** (`agy`) | Gemini, plus its other models | `.agents/mcp_config.json` | SSE (`serverUrl` field) | ✅ Verified 29 July 2026 — live round-trip and script execution passed |
 
@@ -296,6 +296,10 @@ http://[::1]:6767/sse
 opencode mcp add affinity --url "http://[::1]:6767/sse"
 opencode mcp list          # should report: connected
 ```
+
+It writes the **global** `~/.config/opencode/opencode.jsonc`, so every folder gets Affinity at once.
+A failure there reads `SSE error: Was there a typo in the url or port?` — that is what OpenCode says
+when nothing is listening, so check Affinity is running before you check the URL.
 
 **Codex CLI / desktop environment** — sign in first (`codex login` for ChatGPT accounts, or set
 `OPENAI_API_KEY`), then add the bridge to `~/.codex/config.toml`. On Windows, `~` means the current
