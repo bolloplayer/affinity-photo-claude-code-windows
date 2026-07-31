@@ -212,7 +212,18 @@ four of these, plainly:
 Do not end on a bare "please restart Claude Code". Users read that as the setup having failed,
 and some will start over from scratch rather than restart.
 
-### OpenCode
+### OpenCode — the free path, in six steps
+
+**This is the leg to pick if you have no subscription at all.** OpenCode drives almost any model,
+but only one is documented here: `opencode/deepseek-v4-flash-free`, which costs nothing and needs no
+API key. Every other model OpenCode reaches works the same way — the connection is identical, only
+the model changes — so start free, and step up only if the model turns out to be the limit.
+
+**This section is complete on its own.** Do not follow the Claude Code section: it fetches
+`verify.ps1`, which is a Claude Code preflight and reports a missing `.mcp.json` as a problem, and
+neither file is yours. Never create a `.mcp.json` here.
+
+#### Step 1 — register the server
 
 One command, no file editing:
 
@@ -220,6 +231,101 @@ One command, no file editing:
 opencode mcp add affinity --url "http://[::1]:6767/sse"
 opencode mcp list          # should report: connected
 ```
+
+`connected` means the config was written and answered. It is not proof that tools reached a session —
+step 5 is.
+
+> **Record which file this wrote.** This project's own notes disagree: `docs/choosing-your-ai.md`
+> says the global `~/.config/opencode/opencode.jsonc`, while this document's table and the README say
+> a project-level `opencode.jsonc`. Check which one appeared and say so, because it decides step 6:
+> a global file already covers every folder, and offering to "promote" it would be offering the user
+> something they have.
+
+#### Step 2 — pick the free model
+
+Inside OpenCode, `/models` lists what is reachable. Choose **`opencode/deepseek-v4-flash-free`** —
+no credentials, no prepaid balance. Free tiers rate-limit and can be withdrawn without notice; if it
+is gone or queueing, `deepseek-v4-flash` on prepaid credits is the same model family at roughly
+$0.14/M in, and nothing about the connection changes.
+
+#### Step 3 — get the scripts. The bytes must never pass through you
+
+Steps 5 and 6 run scripts from this repo, and an empty folder has none of them:
+
+```powershell
+$raw = "https://raw.githubusercontent.com/bolloplayer/affinity-photo-claude-code-windows/main"
+New-Item -ItemType Directory -Force -Path examples | Out-Null
+Invoke-WebRequest -Uri "$raw/examples/inspect-document.js"      -OutFile examples/inspect-document.js      -UseBasicParsing
+Invoke-WebRequest -Uri "$raw/examples/color-boost-two-layer.js" -OutFile examples/color-boost-two-layer.js -UseBasicParsing
+```
+
+`git clone` is equally fine. **What fails is reading a file into your context and writing it back
+out** — tested twice on other harnesses, the reconstructions came out at 33–49% of real size:
+syntactically valid, silently wrong. `-OutFile` puts the bytes on disk untouched. (This rule is about
+creating files. Later, `execute_script` takes the script *source* as its argument, so reading a file
+in order to hand its contents to Affinity is correct and required.)
+
+Do not fetch `verify.ps1` on this path.
+
+#### Step 4 — write the handoff note
+
+The restart in step 5 starts a session with an empty context. Without a note it greets the user and
+does nothing, and they have to explain the whole setup again. Download it — do not compose it:
+
+```powershell
+Invoke-WebRequest -Uri "$raw/handoff/AGENTS.opencode.md" -OutFile AGENTS.md -UseBasicParsing
+```
+
+> **`AGENTS.md` is OpenCode's documented convention, but no run here has confirmed it is read at
+> startup.** Antigravity's was confirmed the same way — a restarted session given the single word
+> "resume" acted on it — so the shape is right, but treat this as best guess and **record what
+> happens**. Either way, hand the user a fallback line for the restart: *"Continue the Affinity MCP
+> setup — read `AGENTS.md` in this folder and do the read-only steps."*
+
+#### Step 5 — restart, then prove the connection (read-only)
+
+Look for the Affinity tools in your current session first. **Tools present** → OpenCode reloaded the
+config live; skip the restart, and record that finding, because it removes the most awkward step
+here. **Tools absent** → expected; every harness tested so far loads MCP config only at startup.
+
+No tools plus a `connected` config means **restart, not diagnose.** Do not debug SSE or IPv6, and do
+not write your own SSE client — it proves nothing about the user's config, which is the whole
+deliverable. Tell them four things: it worked and nothing is broken; MCP config loads at startup, so
+this session cannot see it; quit and relaunch in this folder, then type "continue"; and the fallback
+line above in case the new session comes back blank.
+
+After the restart, run these three without asking. They change nothing:
+
+1. **The tools are there** — 11 of them, including `read_sdk_documentation_topic`, `execute_script`
+   and `save_script_to_library`.
+2. **Read the preamble.** `read_sdk_documentation_topic({ filename: "preamble" })`. The gate is per
+   SSE connection, so a later `The preamble documentation topic has not yet been read` means the
+   connection was re-established — read it again rather than treating it as a regression.
+3. **Run `examples/inspect-document.js`** via `execute_script`, passing the file's contents. It
+   reports the Affinity version, open documents, spreads and top-level layers, and changes nothing.
+
+#### Step 6 — report, then offer the two options from §3
+
+Report what step 5 established, then **stop.** Everything past here writes to a photo the user has
+open, so it is theirs to ask for. Offer options 1 and 2 from §3 verbatim — run the supplied colour
+boost, or write a black-and-white conversion from scratch — and follow §3's Part B to run whichever
+they pick. Closing on "you can also stop here and nothing will be changed" is a real answer, not a
+failure to choose.
+
+**Option 3 depends on step 1.** If the server went into the global
+`~/.config/opencode/opencode.jsonc`, every folder already has Affinity — tell them that instead of
+offering an upgrade they already own. Only offer option 3 if step 1 wrote a project-level file.
+
+> **Status.** Verified: the connection itself, over native SSE with no bridge, on
+> `opencode/deepseek-v4-flash-free` at $0 with no credentials. **Option 2 is the open question on
+> this model.** Running a supplied script only requires passing its contents to `execute_script`;
+> writing a black-and-white conversion against the SDK is where models diverge, and the free tier has
+> never been measured on it. Paid `deepseek-v4-flash` produced zero hallucinated SDK calls on the
+> script tested here, and — worth knowing — beat the pricier `deepseek-v4-pro`, which invented 3–4
+> calls per complex script. So if option 2 comes back with methods that do not exist, that is the
+> model, not the connection: say so plainly, record it, and note that stepping up to paid Flash costs
+> cents and changes no config. Use `read_sdk_documentation_topic` and `search_sdk_hints` before
+> reaching for an uncertain API call, and record what you learn with `add_sdk_hint`.
 
 ### Antigravity (`agy`) — follow these seven steps, in order
 
