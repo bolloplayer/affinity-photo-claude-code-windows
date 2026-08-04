@@ -1,3 +1,7 @@
+> ⛔ **This repo has moved.** The setup guide, `SETUP.md`, and the tutorial now live at
+> **[bolloplayer/affinity-mcp-setup](https://github.com/bolloplayer/affinity-mcp-setup)** — point
+> your AI agent there instead. This repo is kept only so old links don't 404.
+
 # Connect your AI to Affinity Photo
 
 **Affinity Photo v3 has a built-in MCP server.** That means an AI agent — Claude Code, Codex,
