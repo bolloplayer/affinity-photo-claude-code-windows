@@ -64,6 +64,25 @@
   :focus-visible { outline: 2px solid var(--magenta); outline-offset: 2px; }
   .wrap { max-width: 768px; margin: 0 auto; padding: 0 24px; }
 
+  /* ---------- moved notice ---------- */
+  .moved {
+    max-width: 768px;
+    margin: 24px auto 0;
+    padding: 16px 20px;
+    border: 1px solid var(--magenta);
+    border-left-width: 4px;
+    border-radius: 6px;
+    background: var(--note-bg);
+    color: var(--ink);
+    font-size: .95rem;
+    line-height: 1.55;
+  }
+  .moved b { color: var(--magenta); }
+  .moved p { margin: 0; }
+  .moved p + p { margin-top: 8px; }
+  .moved .sub { color: var(--ink-soft); font-size: .88rem; }
+  @media (max-width: 815px) { .moved { margin: 24px 24px 0; } }
+
   /* ---------- hero ---------- */
   .hero { padding: 64px 24px 48px; }
   .eyebrow {
@@ -407,6 +426,17 @@
 <body>
 
 <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch between light and dark theme">☾</button>
+
+<aside class="moved">
+  <p><b>⛔ This guide has moved.</b> The current version — covering Claude Code, Codex, Antigravity
+  and OpenCode — now lives at
+  <a href="https://bolloplayer.github.io/affinity-mcp-setup/"><b>bolloplayer.github.io/affinity-mcp-setup</b></a>.</p>
+  <p class="sub">The page below is kept so old links don't break, but it is no longer updated. It
+  names the wrong config file for Antigravity, among other things. Follow the new one instead —
+  or point your AI agent at
+  <a href="https://github.com/bolloplayer/affinity-mcp-setup/blob/main/SETUP.md"><code>SETUP.md</code></a>
+  in the new repo and it will set the connection up itself.</p>
+</aside>
 
 <header class="hero wrap">
   <p class="eyebrow"><b>Affinity</b> · <b>Claude Code</b> · <b>Windows</b> &nbsp;|&nbsp; <span class="m">−C</span> <span class="c">+M</span> <span class="y">+Y</span></p>
